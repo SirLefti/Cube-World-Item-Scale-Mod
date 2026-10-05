@@ -5,7 +5,7 @@
 // factor, so that large/rotating item models stop overlapping their neighbours
 // and their box borders.
 
-// ---- build requirements -------------------------------------------------
+// ---- build requirements -----------------------------------------------------
 #include <stdint.h>   // UINTPTR_MAX - pointer width, checked portably
 
 #if !defined(_WIN32)
@@ -26,7 +26,7 @@
 // below ~0.71 cannot overlap its box.
 static const float SCALE = 0.65f;
 
-// ---- the hook site -------------------------------------------------------
+// ---- the hook site ----------------------------------------------------------
 //
 // DrawItemModel @ 0x004758C0, __thiscall + 6 cdecl-pushed args:
 //
@@ -50,8 +50,6 @@ static const BYTE EXPECTED_BYTES[HOOK_LEN] = {
     0x8B, 0xEC,                         // mov ebp, esp
     0x81, 0xEC, 0xA8, 0x01, 0x00, 0x00  // sub esp, 0x1a8
 };
-
-// ---- hook ----------------------------------------------------------------
 
 extern "C" void OnDrawItemModel(float* scale)
 {
