@@ -4,6 +4,8 @@ Shrinks every item model the UI draws, so bulky/rotating models (especially
 every cube shaped objects) stop clipping into their neighbours and out of their
 boxes.
 
+This mod is for the **alpha** build of Cube World.
+
 ## Installation
 
 * requires [coremaze Cube-World-Mod-Launcher](https://github.com/coremaze/Cube-World-Mod-Launcher/releases/tag/v1.5)
