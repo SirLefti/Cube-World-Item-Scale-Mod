@@ -5,6 +5,10 @@ the UI are scaled. This makes items appear way too big on high resolution
 displays. This mod enforces a fixed size for items that looks good on all
 resolutions, so that items do not clip into their neighbours.
 
+![The inventory before and after](itemscale.png)
+*In vanilla the items overflow their slots, covering the header, the scrollbar
+and each other. This is an example on a 1440p monitor. 2160p is even worse.*
+
 This mod is for the **alpha** build of Cube World.
 
 ## Installation
