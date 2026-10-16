@@ -1,8 +1,9 @@
 # Cube World Item Scale Mod
 
-Shrinks every item model the UI draws, so bulky/rotating models (especially
-every cube shaped objects) stop clipping into their neighbours and out of their
-boxes.
+The game does not scale UI elements with the game resolution, but items inside
+the UI are scaled. This makes items appear way too big on high resolution
+displays. This mod enforces a fixed size for items that looks good on all
+resolutions, so that items do not clip into their neighbours.
 
 This mod is for the **alpha** build of Cube World.
 
@@ -16,6 +17,6 @@ This mod is for the **alpha** build of Cube World.
 ## Compilation
 
 Requires a compiler that targets 32-bit Windows. Due to the `asm` style, `MSVC`
-will not work, use `GCC` or `Clang`. Run `make` in this directory and specify 
-the compiler as `CXX` variable if necessary (e.g. 
+will not work, use `GCC` or `Clang`. Run `make` in this directory and specify
+the compiler as `CXX` variable if necessary (e.g.
 `make CXX=i686-w64-mingw32-g++`).

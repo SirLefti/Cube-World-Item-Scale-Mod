@@ -1,9 +1,11 @@
 // Cube World Alpha - Item Scale Mod
 //
-// Shrinks every item model the UI draws (inventory, equipment grid, equipment
-// slots, vendor list, hotbar, tooltips, world-space item labels) by a constant
-// factor, so that large/rotating item models stop overlapping their neighbours
-// and their box borders.
+// Every item model the UI draws (inventory, equipment grid, equipment slots,
+// vendor list, hotbar, tooltips, world-space item labels) grows and shrinks
+// with the game's resolution, but the UI elements themselves are fixed in size.
+// This causes items to be drawn too big for the UI scaling, increasingly on
+// higher resolution displays. This mod renders items in a constant size
+// relative to the UI elements on any resolution.
 
 // ---- build requirements -----------------------------------------------------
 #include <stdint.h>   // UINTPTR_MAX - pointer width, checked portably
@@ -20,11 +22,14 @@
 
 #include <windows.h>
 
-// Scale multiplier, 1.0 is vanilla size. A cube-shaped model spinning about
-// its vertical axis sweeps a circle of diameter sqrt(2) ~ 1.41x its width, but
-// the game sizes it to its box as if it were axis-aligned - hence anything
-// below ~0.71 cannot overlap its box.
-static const float SCALE = 0.65f;
+// Scale multiplier at REF_HEIGHT. 1.0 is vanilla size, which means at
+// REF_HEIGHT, we already scale down a bit, because items do clip already at
+// this resolution.
+static const float SCALE = 0.87f;
+
+// The reference render height, where our scale applies as-is. If the game
+// resolution is higher or lower, the scale is adjusted.
+static const int REF_HEIGHT = 1080;
 
 // ---- the hook site ----------------------------------------------------------
 //
@@ -42,7 +47,8 @@ static const float SCALE = 0.65f;
 // it is a clean uniform scale. Every UI surface that draws an item goes
 // through this one function, so hooking the callee covers all nine call sites.
 static const uint32_t RVA_DRAW_ITEM = 0x000758C0;
-static const int      HOOK_LEN      = 9;   // push ebp / mov ebp,esp / sub esp,0x1a8
+static const uint32_t OFFSET_HEIGHT = 0x120; // offset where we find the height in the renderer
+static const int HOOK_LEN = 9; // push ebp / mov ebp,esp / sub esp,0x1a8
 
 // The exact bytes we expect to replace - a mismatch means a different build.
 static const BYTE EXPECTED_BYTES[HOOK_LEN] = {
@@ -51,9 +57,14 @@ static const BYTE EXPECTED_BYTES[HOOK_LEN] = {
     0x81, 0xEC, 0xA8, 0x01, 0x00, 0x00  // sub esp, 0x1a8
 };
 
-extern "C" void OnDrawItemModel(float* scale)
+extern "C" void OnDrawItemModel(float* scale, const BYTE* renderer)
 {
-    *scale *= SCALE;
+    int height = *(const int*)(renderer + OFFSET_HEIGHT);
+    if (height <= 0) { // avoid div by zero
+        *scale *= SCALE;
+    } else {
+        *scale *= SCALE * REF_HEIGHT / height;
+    }
 }
 
 extern "C" {
@@ -69,9 +80,10 @@ extern "C" __attribute__((naked)) void HookStub()
     asm("pushad");                              // push registers to stack
 
     asm("lea eax, [esp+0x30]");                 // &scale: [esp+0x10] on entry, +0x20 for the pushad
+    asm("push ecx");                            // renderer (this), for the window height
     asm("push eax");                            // pass it by pointer, so the callee can scale it
     asm("call _OnDrawItemModel");
-    asm("add esp, 4");                          // cdecl, caller cleans
+    asm("add esp, 8");                          // cdecl, caller cleans
 
     asm("popad");                               // pops stack back to registers
     asm("push ebp");                            // original code
