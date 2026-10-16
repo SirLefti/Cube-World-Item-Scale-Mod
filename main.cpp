@@ -19,12 +19,39 @@
 #endif
 
 #include <windows.h>
+#include <math.h>
 
-// Scale multiplier, 1.0 is vanilla size. A cube-shaped model spinning about
-// its vertical axis sweeps a circle of diameter sqrt(2) ~ 1.41x its width, but
-// the game sizes it to its box as if it were axis-aligned - hence anything
-// below ~0.71 cannot overlap its box.
-static const float SCALE = 0.65f;
+static BOOL CALLBACK GameWindow(HWND window, LPARAM result)
+{
+    DWORD pid;
+    GetWindowThreadProcessId(window, &pid);
+
+    if (pid == GetCurrentProcessId() && IsWindowVisible(window) && GetWindow(window, GW_OWNER) == NULL) {
+        *reinterpret_cast<HWND*>(result) = window;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static float CurrentWindowScale()
+{
+    HWND window;
+    EnumWindows(GameWindow, reinterpret_cast<LPARAM>(&window));
+
+    RECT bounds;
+    if (!window) {
+        return 0.65f;
+    }
+
+    if (!GetWindowRect(window, &bounds) || bounds.right <= bounds.left || bounds.bottom <= bounds.top) {
+        return 0.65f;
+    }
+
+    auto height = bounds.bottom - bounds.top;
+    // E = `log(1 / 0.65) / log(1440 / 1080)`
+    return powf(1080.0f / static_cast<float>(height), 1.49742704653f);
+}
 
 // ---- the hook site ----------------------------------------------------------
 //
@@ -53,7 +80,7 @@ static const BYTE EXPECTED_BYTES[HOOK_LEN] = {
 
 extern "C" void OnDrawItemModel(float* scale)
 {
-    *scale *= SCALE;
+    *scale *= CurrentWindowScale();
 }
 
 extern "C" {
